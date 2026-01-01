@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CANLI İZLEME PANELİ</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { background: #000; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        #live { width: 100vw; height: 100vh; object-fit: contain; }
+        .info { position: absolute; top: 10px; left: 10px; color: #0f0; font-family: monospace; background: rgba(0,0,0,0.7); padding: 5px; }
+    </style>
+</head>
+<body>
+    <div class="info">DURUM: AKTİF | ÇÖZÜNÜRLÜK: 640x480</div>
+    <img id="live" src="">
+    <script>
+        const socket = io();
+        socket.on('stream_to_panel', (d) => { document.getElementById('live').src = d; });
+    </script>
+</body>
+</html>
